@@ -12,7 +12,13 @@
 %% through the pmc(3) library.
 
 init() ->
-    ok = erlang:load_nif("./pmc_nif", 0).
+    case code:where_is_file("pmc_nif.so") of
+        non_existing ->
+            false;
+        Filename ->
+            NoSuffix = string:sub_string(Filename, 1, length(Filename)-3),
+            ok = erlang:load_nif(NoSuffix, 0)
+    end.
 
 %% Allocate a counter for an event specifier.
 
