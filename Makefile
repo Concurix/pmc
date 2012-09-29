@@ -13,7 +13,7 @@ APP_FILE := pmc.app
 APP_SRC  := $(APP_FILE).src
 APP      := $(EBIN)/$(APP_FILE)
 
-all:	$(EBIN) $(APP) $(MODULE)
+all:	$(EBIN) $(APP) $(MODULE) $(NIF_LIB)
 
 $(EBIN):
 	mkdir -p $(EBIN)
@@ -22,17 +22,18 @@ $(EBIN)/%.beam: $(ESRC)/%.erl
 	@echo "    ERLC $<"
 	@$(ERLC) $(EFLAGS) -o $(EBIN) $<
 
-%.beam: %.erl
-	$(ERLC) $(EFLAGS) -o $(dir $@) $<
+$(EBIN)/pmc.o: $(ESRC)/pmc.c
+	gcc -I/usr/local/lib/erlang/usr/include -fPIC -c $< -o $@
+
+
+$(NIF_LIB): $(EBIN)/pmc.o
+	gcc -o $@ -fPIC -shared $< -lpmc
 
 $(APP): $(ESRC)/$(APP_SRC)
 	cp $(ESRC)/$(APP_SRC) $@
 
 clean:
-	$(RM) $(BIN)
-
-distclean: clean
-	$(RM) $(EBIN) $(APP)
+	$(RM) $(EBIN)/*.beam $(NIF_LIB) $(APP)
 
 
 

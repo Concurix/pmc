@@ -15,28 +15,37 @@ init() ->
     ok = erlang:load_nif("./pmc_nif", 0).
 
 %% Allocate a counter for an event specifier.
+
+-spec allocate(atom()) -> integer().
 allocate(_ES) ->
     exit(nif_library_not_loaded).
 
+-spec release(integer()) -> atom().
 release(_Id) ->
     exit(nif_library_not_loaded).
 
+-spec attach(integer()) -> atom().
 attach(_Id) ->
     exit(nif_library_not_loaded).
 
+-spec start(integer()) -> atom().
 start(_Id) ->
     exit(nif_library_not_loaded).
 
+-spec stop(integer()) -> atom().
 stop(_Id) ->
     exit(nif_library_not_loaded).
 
+-spec read(integer()) -> atom() | integer().
 read(_Id) ->
     exit(nif_library_not_loaded).
 
+-spec write(integer(), integer()) -> atom().
 write(_Id, _Val) ->
     exit(nif_library_not_loaded).
 
 %% Measure the performance of a function call using a list of counters.
+-spec call(fun(), list(), list()) -> term().
 call(Fun, Args, Events) when is_list(Events), length(Events) =< 4 ->
     call_with_pmcs(Fun, Args, Events).
 

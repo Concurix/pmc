@@ -1,0 +1,10 @@
+% vim: set ft=erlang:
+
+{application, pmc,
+ [{description, "Hardware performance monitoring counter library"},
+  {vsn, "0.1"},
+  {modules, [pmc]},
+  {registered, []},
+  {applications, [compiler, stdlib]},
+  {env, []}]}.
+
