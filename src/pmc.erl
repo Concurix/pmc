@@ -6,10 +6,12 @@
          start/1, stop/1,
 	 read/1, write/2,
          call/3]).
--on_load(init/0).
 
 %% A NIF module to allow the use of hardware performance counters
 %% through the pmc(3) library.
+
+-ifdef(HAVE_PMCS).
+-on_load(init/0).
 
 init() ->
     case code:where_is_file("pmc_nif.so") of
@@ -80,5 +82,43 @@ call_with_pmcs(Fun, Args, [E|Es]) ->
         Error ->
             {error, {E, Error}}
     end.
-                
+
+-else.
+
+%% Stub definitions for platforms that do not support PMCs.
+
+-spec allocate(atom()) -> not_supported.
+allocate(_ES) ->
+    not_supported.
+
+-spec release(integer()) -> not_supported.
+release(_Id) ->
+    not_supported.
+
+-spec attach(integer()) -> not_supported.
+attach(_Id) ->
+    not_supported.
+
+-spec start(integer()) -> not_supported.
+start(_Id) ->
+    not_supported.
+
+-spec stop(integer()) -> not_supported.
+stop(_Id) ->
+    not_supported.
+
+-spec read(integer()) -> not_supported.
+read(_Id) ->
+    not_supported.
+
+-spec write(integer(), integer()) -> not_supported.
+write(_Id, _Val) ->
+    not_supported.
+
+%% Measure the performance of a function call using a list of counters.
+-spec call(fun(), list(), list()) -> not_supported.
+call(_Fun, _Args, _Events) ->
+    not_supported.
+
+-endif.
 

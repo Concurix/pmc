@@ -1,7 +1,17 @@
 
 ERLC ?= erlc
 
+SYSTEM = $(shell uname)
+
+ifeq ($SYSTEM,FreeBSD)
+
+EFLAGS += -DHAVE_PMCS +debug_info +warn_exported_vars +warn_unused_vars +warn_unused_import +warn_missing_spec
+
+else
+
 EFLAGS += +debug_info +warn_exported_vars +warn_unused_vars +warn_unused_import +warn_missing_spec
+
+endif
 
 ESRC ?= src
 EBIN ?= ebin
@@ -23,11 +33,18 @@ $(EBIN)/%.beam: $(ESRC)/%.erl
 	@$(ERLC) $(EFLAGS) -o $(EBIN) $<
 
 $(EBIN)/pmc.o: $(ESRC)/pmc.c
+ifeq ($SYSTEM,FreeBSD)
 	gcc -I/usr/local/lib/erlang/usr/include -fPIC -c $< -o $@
-
+else
+	@echo "Not building PMC library"
+endif
 
 $(NIF_LIB): $(EBIN)/pmc.o
+ifeq ($SYSTEM,FreeBSD)
 	gcc -o $@ -fPIC -shared $< -lpmc
+else
+	@echo "Not building PMC library"
+endif
 
 $(APP): $(ESRC)/$(APP_SRC)
 	cp $(ESRC)/$(APP_SRC) $@
