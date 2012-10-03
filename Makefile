@@ -4,6 +4,14 @@ ERLC ?= erlc
 SYSTEM = $(shell uname)
 
 ifeq ($(SYSTEM),FreeBSD)
+HAVE_PMCS=true
+else ifeq ($(SYSTEM),Concurix)
+HAVE_PMCS=true
+else
+HAVE_PMCS=false
+endif
+
+ifeq ($(HAVE_PMCS),true)
 
 EFLAGS += -DHAVE_PMCS +debug_info +warn_exported_vars +warn_unused_vars +warn_unused_import +warn_missing_spec
 
@@ -33,14 +41,14 @@ $(EBIN)/%.beam: $(ESRC)/%.erl
 	@$(ERLC) $(EFLAGS) -o $(EBIN) $<
 
 $(EBIN)/pmc.o: $(ESRC)/pmc.c
-ifeq ($(SYSTEM),FreeBSD)
+ifeq ($(HAVE_PMCS),true)
 	gcc -I/usr/local/lib/erlang/usr/include -fPIC -c $< -o $@
 else
 	@echo "Not building PMC library"
 endif
 
 $(NIF_LIB): $(EBIN)/pmc.o
-ifeq ($(SYSTEM),FreeBSD)
+ifeq ($(HAVE_PMCS),true)
 	gcc -o $@ -fPIC -shared $< -lpmc
 else
 	@echo "Not building PMC library"
