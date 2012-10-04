@@ -57,31 +57,25 @@ write(_Id, _Val) ->
 call(Fun, Args, Events) when is_list(Events), length(Events) =< 4 ->
     call_with_pmcs(Fun, Args, Events).
 
-call_with_pmcs(Fun, Args, []) ->
-    {apply(Fun, Args), []};
-call_with_pmcs(Fun, Args, [E|Es]) ->
-    case pmc:allocate(E) of
-        Pmc when is_number(Pmc) ->
-            ok = pmc:write(Pmc, 0),
-            ok = pmc:attach(Pmc),
-            ok = pmc:start(Pmc),
-            Result = call_with_pmcs(Fun, Args, Es),
-            ok = pmc:stop(Pmc),
-            Count = pmc:read(Pmc),
-            ok = pmc:release(Pmc),
+call_with_pmcs(Fun, Args, Events) ->
+    Pmcs = lists:map(fun pmc:allocate/1, Events),
+    case lists:all(fun (P) -> is_number(P) end, Pmcs) of
+        true ->
+            lists:foreach(fun (P) -> ok = pmc:write(P, 0) end, Pmcs),
+	    lists:foreach(fun (P) -> ok = pmc:attach(P) end, Pmcs),
+	    lists:foreach(fun (P) -> ok = pmc:start(P) end, Pmcs),
+	    Result = apply(Fun, Args),
+	    lists:foreach(fun (P) -> ok = pmc:stop(P) end, Pmcs),
+	    Counts = lists:map(fun (P) -> pmc:read(P) end, Pmcs),
+	    lists:foreach(fun (P) -> ok = pmc:release(P) end, Pmcs),
 
-            %% In the case of errors, just propagate the error message
             %% In the case of success, propagate the result with
             %% counts attached.
-            case Result of
-                {error, _} ->
-                    Result;
-                {CallResult, Counts} ->
-                    {CallResult, [{E, Count}|Counts]}
-            end;
-        Error ->
-            {error, {E, Error}}
+	    {Result, lists:zip(Events, Counts)};
+        false ->
+            {error, Events}
     end.
+
 
 -else.
 
